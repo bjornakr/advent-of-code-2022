@@ -9,6 +9,5 @@ object Main extends App {
 //   println(Day2.solve1())
 //   println(Day2.solve2())
   println(Day3.solve1())
-  println(Day3.solve1a())
   println(Day3.solve2())
 }
