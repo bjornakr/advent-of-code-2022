@@ -1,17 +1,28 @@
 //> using lib "org.typelevel::cats-core:2.9.0"
 
-import scala.collection.mutable
 import cats.implicits.*
-import scala.collection.mutable.ListBuffer
-import scala.collection.MapView
 
 object Day5 {
 
    opaque type Position = Int
+   opaque type Crates   = Map[Position, List[Char]]
 
-   opaque type Crates = mutable.Map[Position, mutable.Stack[Char]]
+   object Crates {
+      def moveGroup(crates: Crates, moveOrder: MoveOrder): Crates = {
+         val (lifted, remaining) = crates(moveOrder.from).splitAt(moveOrder.amount)
+         crates
+            .updatedWith(moveOrder.from)(cs => Some(remaining))
+            .updatedWith(moveOrder.to)(cs => Some(cs.map(lifted ++ _)).get)
+      }
 
-   val initSetup = Map.empty[Position, List[Char]]
+      def moveOneByOne(crates: Crates, moveOrder: MoveOrder): Crates = moveOrder match {
+         case MoveOrder(0, from, to) => crates
+         case MoveOrder(amount, from, to) =>
+            val moved = moveGroup(crates, MoveOrder(1, from, to))
+            moveOneByOne(moved, MoveOrder(amount - 1, from, to))
+      }
+   }
+   import Crates.*
 
    case class MoveOrder(amount: Int, from: Position, to: Position)
 
@@ -29,8 +40,8 @@ object Day5 {
    def parseCrateLine(
        s: String,
        pos: Position = 1,
-       acc: mutable.Map[Position, Char] = mutable.Map.empty,
-   ): mutable.Map[Position, Char] =
+       acc: Map[Position, Char] = Map.empty,
+   ): Map[Position, Char] =
       s match {
          case "" => acc
          case _ =>
@@ -42,7 +53,7 @@ object Day5 {
    def parseCrates(lines: List[String]) = {
       val crates = lines.map(parseCrateLine(_))
       crates.foldLeft(Map.empty[Position, List[Char]]) { (acc, next) =>
-         acc.combine(next.mapValues(List(_)).toMap)
+         acc.combine(next.view.mapValues(List(_)).toMap)
       }
    }
 
@@ -52,58 +63,27 @@ object Day5 {
    }
 
    def parse(lines: List[String]): IN = {
-      val crateLines      = lines.takeWhile(s => s.charAt(1) != '1')
-      val cratesImmutable = parseCrates(crateLines)
-      val cratesMutable   = mutable.Map() ++ cratesImmutable.mapValues(mutable.Stack.empty ++ _)
-      val moveOrderLines  = lines.drop(crateLines.length + 2)
-      val moveOrders      = moveOrderLines.map(parseMoveOrder)
-      (cratesMutable, moveOrders)
+      val crateLines     = lines.takeWhile(s => s.charAt(1) != '1')
+      val crates         = parseCrates(crateLines)
+      val moveOrderLines = lines.drop(crateLines.length + 2)
+      val moveOrders     = moveOrderLines.map(parseMoveOrder)
+      (crates, moveOrders)
    }
 
-   def peekTop(crates: mutable.Map[Position, mutable.Stack[Char]]): String = {
-      import scala.util.Try
-      val a: List[Char] = crates.values.map(v => Try(v.top).toOption).toList.flatten
-      a.mkString
+   def skimTop(crates: Map[Position, List[Char]]): String = {
+      crates.toList.sorted.map(_._2.headOption).toList.flatten.mkString
    }
 
    def solve1(input: List[String] = readData(dayNo = 5)): OUT = {
-      def executeMoveOrder(
-          moveOrder: MoveOrder,
-          crates: mutable.Map[Position, mutable.Stack[Char]],
-      ): mutable.Map[Position, mutable.Stack[Char]] = moveOrder match {
-         case MoveOrder(0, _, _) => crates
-         case MoveOrder(amount, from, to) =>
-            val crate = crates(from).pop
-            crates(moveOrder.to).push(crate)
-            executeMoveOrder(MoveOrder(amount - 1, from, to), crates)
-      }
-
       val (crates, moveOrders) = parse(input)
-      val res                  = moveOrders.foldLeft(crates)((acc, next) => executeMoveOrder(next, acc))
-      peekTop(res)
+      val res                  = moveOrders.foldLeft(crates)((acc, next) => moveOneByOne(acc, next))
+      skimTop(res)
    }
 
-   def solve2(input: List[String] = realData(dayNo = 5)): OUT = {
-
-      def executeMoveOrder(
-          moveOrder: MoveOrder,
-          crates: mutable.Map[Position, mutable.ListBuffer[Char]],
-      ): mutable.Map[Position, mutable.ListBuffer[Char]] = moveOrder match {
-         case MoveOrder(0, _, _) => crates
-         case MoveOrder(amount, from, to) =>
-            val (lifted, remaining)         = crates(from).splitAt(amount)
-            val a: mutable.ListBuffer[Char] = crates(to)
-            a.addAll(lifted)
-            crates.put(from, remaining)
-            executeMoveOrder(MoveOrder(amount - 1, from, to), crates)
-      }
-
+   def solve2(input: List[String] = readData(dayNo = 5)): OUT = {
       val (crates, moveOrders) = parse(input)
-      val mv2: Map[Position, ListBuffer[Char]] =
-         crates.mapValuesInPlace((v: mutable.Stack[Char]) => mutable.ListBuffer.from(v))
-      val res = moveOrders.foldLeft(mv2)((acc, next) => executeMoveOrder(next, acc))
-      peekTop(res)
-
+      val res                  = moveOrders.foldLeft(crates)((acc, next) => moveGroup(acc, next))
+      skimTop(res)
    }
 
 }
