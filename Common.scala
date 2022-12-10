@@ -10,18 +10,19 @@ trait Solver[A] {
 
 trait Solver2 {
   type IN
-  val decode: String => IN
+  type OUT = Int
+  def parse(s: String): IN
   def dayNo: Int
-  def realData: List[IN] = readData(dayNo).map(decode)
-  def solve1(input: List[IN]): Int
-  def solve2(input: List[IN]): Int
-  def solve1Raw(input: List[String]): Int = solve1(input.map(decode))
-  def solve2Raw(input: List[String]): Int = solve2(input.map(decode))
+  def realData: List[IN] = readData(dayNo).map(parse)
+  def solve1(input: List[IN]): OUT
+  def solve2(input: List[IN]): OUT
+  def solve1Raw(input: List[String]): OUT = solve1(input.map(parse))
+  def solve2Raw(input: List[String]): OUT = solve2(input.map(parse))
 
 }
 
 trait StringSolver extends Solver2 {
   override type IN = String
-  override val decode   = identity
-  override def realData = readData(dayNo)
+  override def parse(s: String): String = s
+  override def realData                 = readData(dayNo)
 }
