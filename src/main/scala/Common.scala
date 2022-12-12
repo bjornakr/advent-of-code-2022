@@ -1,5 +1,3 @@
-//> using scala "3.2.1"
-
 def readData(dayNo: Int) = scala.io.Source.fromFile(s"data/day$dayNo.txt").getLines().toList
 
 trait Solver[A] {

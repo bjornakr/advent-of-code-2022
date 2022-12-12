@@ -1,5 +1,3 @@
-//> using lib "org.scalatest::scalatest::3.2.9"
-
 class Day4Test extends org.scalatest.funsuite.AnyFunSuite {
   val input = List(
     "2-4,6-8",

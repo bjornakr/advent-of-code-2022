@@ -1,7 +1,3 @@
-// import Common.*
-import Day1.*
-import Day2.*
-
 object Main extends App {
    println("Hello!")
 // println(Day1.solve1)
@@ -14,6 +10,8 @@ object Main extends App {
    //  println(Day4.solve2())
    // println(Day5.solve1())
    // println(Day5.solve2())
-   println(Day6.solve1())
-   println(Day6.solve2())
+//   println(Day6.solve1())
+//   println(Day6.solve2())
+   println(Day7.solve1())
+//   println(Day7.solve2())
 }
