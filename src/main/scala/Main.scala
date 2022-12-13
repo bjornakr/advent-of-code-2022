@@ -13,5 +13,5 @@ object Main extends App {
 //   println(Day6.solve1())
 //   println(Day6.solve2())
    println(Day7.solve1())
-//   println(Day7.solve2())
+   println(Day7.solve2())
 }

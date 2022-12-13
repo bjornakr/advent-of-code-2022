@@ -5,3 +5,5 @@
 throwaway.txt
 .idea
 target/
+.bloop
+metals.sbt
